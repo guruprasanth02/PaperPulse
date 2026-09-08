@@ -1,0 +1,8 @@
+{
+  "name": "PaperPulse — AI-Based Intelligent Research Paper Recommendation & Literature Survey Assistant",
+  "description": "A final-year project for AI-powered research paper recommendation, automated literature survey generation, cross-document comparison, research gap analysis, and trend discovery — built with React, FastAPI, and Google Gemini.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
