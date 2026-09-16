@@ -53,39 +53,32 @@ export default function UploadZone({ onUploadComplete }) {
       toast.error('VITE_GEMINI_API_KEY is not set in .env. PDF text and metadata extraction will not work. Add your Gemini API key and restart the dev server.');
     }
 
-    const processed = [];
+    setStep(`Processing ${files.length} document(s)...`);
+    setProgress(15);
 
-    for (let i = 0; i < files.length; i++) {
-      const file  = files[i];
+    let completedCount = 0;
+    const processSingleFile = async (file, i) => {
       const isText = file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md');
       const isPdf  = file.type === 'application/pdf' || file.name.endsWith('.pdf');
-
-      setProgress(5);
-      setStep(`Reading: ${file.name}`);
 
       let content = '';
       try {
         if (isText) {
           content = await readAsText(file);
         } else if (isPdf) {
-          setStep(`AI extracting PDF: ${file.name}`);
           const base64 = await readAsBase64(file);
           content = await extractTextFromFile(file.name, base64);
         } else {
-          setStep(`AI digitizing: ${file.name}`);
           content = await extractTextFromFile(file.name, null);
         }
-        setProgress(45);
 
-        setStep('Extracting metadata...');
+        // Run metadata extraction
         const meta = await extractDocumentMetadata(content, file.name);
-        setProgress(75);
 
-        setStep('Indexing chunks...');
-        await new Promise((r) => setTimeout(r, 400));
-        setProgress(100);
+        completedCount++;
+        setProgress(Math.min(95, Math.round((completedCount / files.length) * 100)));
 
-        processed.push({
+        return {
           id:          `doc-${Date.now()}-${i}`,
           title:       meta.title || file.name.replace(/\.[^/.]+$/, ''),
           filename:    file.name,
@@ -96,12 +89,17 @@ export default function UploadZone({ onUploadComplete }) {
           fullText:    content,
           uploadedAt:  new Date().toISOString(),
           fileSize:    file.size,
-        });
+        };
       } catch (err) {
         toast.error(`Failed to process "${file.name}": ${err?.message || 'Unknown error'}`);
+        return null;
       }
-    }
+    };
 
+    const results = await Promise.all(files.map((file, i) => processSingleFile(file, i)));
+    const processed = results.filter(Boolean);
+
+    setProgress(100);
     if (processed.length > 0) onUploadComplete(processed);
     setStep(null);
     setProgress(0);

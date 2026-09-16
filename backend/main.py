@@ -151,12 +151,10 @@ CITATIONS: [List of citations in format: "Document Title, Page X: 'snippet'"]
         # Define a list of models to try in order of preference
         # Models ordered by free-tier quota availability
         models_to_try = [
-            'gemini-3.6-flash',         # Primary Gemini 3 Flash model
+            'gemini-3.5-flash-lite',    # Primary Gemini 3.5 Flash Lite
             'gemini-3.5-flash',         # Gemini 3.5 Flash
-            'gemini-3.5-flash-lite',    # Gemini 3.5 Flash Lite
-            'gemini-3.1-flash-lite',    # Gemini 3.1 Lite
-            'gemini-flash-latest',      # Latest Flash alias
-            'gemini-2.0-flash',         # Gemini 2.0 Fallback
+            'gemini-3.6-flash',         # Gemini 3.6 Flash
+            'gemini-3.1-flash-lite',    # Gemini 3.1 Flash Lite
         ]
         
         response = None
@@ -295,7 +293,7 @@ CONTEXT:
         if genai is None:
             return ["Summarize the document", "What are the key findings?", "Explain the methodology"]
 
-        suggest_models = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest']
+        suggest_models = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite']
         text = ''
         for m in suggest_models:
             try:

@@ -8,6 +8,7 @@ from .models import Paper, FilterOptions, RecommendationResponse
 from .embeddings import generate_embedding
 from .vector_store import VectorStore
 from .search import PAPER_DATASET
+from .arxiv_fetcher import fetch_arxiv_papers
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,11 @@ class RecommendationEngine:
     def add_custom_paper(self, paper_dict: Dict[str, Any]):
         """Add dynamic user paper to recommendation pool."""
         paper_id = paper_dict.get("id") or f"custom-{len(self.papers)+1}"
-        self.papers[paper_id] = paper_dict
-        combo_text = f"{paper_dict.get('title', '')}. {paper_dict.get('domain', '')}. {paper_dict.get('abstract', '')}"
-        vec = generate_embedding(combo_text)
-        self.vector_store.add(paper_id, vec, paper_dict)
+        if paper_id not in self.papers:
+            self.papers[paper_id] = paper_dict
+            combo_text = f"{paper_dict.get('title', '')}. {paper_dict.get('domain', '')}. {paper_dict.get('abstract', '')}"
+            vec = generate_embedding(combo_text)
+            self.vector_store.add(paper_id, vec, paper_dict)
 
     def _apply_filters(self, paper: Dict[str, Any], score: float, filters: Optional[FilterOptions]) -> bool:
         """Evaluate if paper satisfies filter criteria."""
@@ -95,6 +97,16 @@ class RecommendationEngine:
         combined_query = " ".join(parts).strip()
         if not combined_query:
             combined_query = "Machine Learning AI RAG"
+
+        # Dynamically fetch real published papers from arXiv API for topic / general queries
+        search_term = query or (" ".join(keywords) if keywords else "") or combined_query[:100]
+        if search_term and len(search_term.strip()) > 2:
+            try:
+                arxiv_papers = fetch_arxiv_papers(search_term.strip(), max_results=top_k)
+                for p in arxiv_papers:
+                    self.add_custom_paper(p)
+            except Exception as ex:
+                logger.warning(f"Could not fetch dynamic arXiv papers: {ex}")
 
         # Generate query vector
         q_vec = generate_embedding(combined_query)

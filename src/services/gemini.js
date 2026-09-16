@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 
 const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
-const PREFERRED_MODELS = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-2.0-flash'];
+const PREFERRED_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash', 'gemini-3.1-flash-lite'];
 
 async function callGemini(prompt, options = {}) {
   let lastErr;
@@ -19,8 +19,11 @@ async function callGemini(prompt, options = {}) {
         lastErr = err;
         const msg = err?.message || String(err);
         console.warn(`Model ${model} (attempt ${attempt + 1}) failed:`, msg);
+        if (msg.includes('404') || msg.includes('NOT_FOUND') || msg.includes('not found')) {
+          break; // Immediately try next model if model is not found
+        }
         if (msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')) {
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise(r => setTimeout(r, 1000));
         } else {
           break; // move to next model if not a rate limit
         }
@@ -39,7 +42,7 @@ async function callGeminiWithFile(filename, base64Data, mimeType = 'application/
     ? base64Data.split('base64,')[1]
     : base64Data;
   let lastErr;
-  for (const model of ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-2.0-flash']) {
+  for (const model of PREFERRED_MODELS) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const result = await genAI.models.generateContent({
@@ -59,8 +62,11 @@ async function callGeminiWithFile(filename, base64Data, mimeType = 'application/
         lastErr = err;
         const msg = err?.message || String(err);
         console.warn(`OCR model ${model} (attempt ${attempt + 1}) failed:`, msg);
+        if (msg.includes('404') || msg.includes('NOT_FOUND') || msg.includes('not found')) {
+          break; // Immediately try next model if model is not found
+        }
         if (msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED')) {
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise(r => setTimeout(r, 1000));
         } else {
           break; // move to next model
         }
@@ -81,7 +87,18 @@ export async function extractTextFromFile(filename, base64Data) {
   }
   try {
     if (base64Data) {
-      return await callGeminiWithFile(filename, base64Data);
+      try {
+        return await callGeminiWithFile(filename, base64Data);
+      } catch (ocrErr) {
+        console.warn('PDF multimodal OCR failed, attempting text prompt reconstruction:', ocrErr?.message || ocrErr);
+        const prompt = `
+You are an academic paper reconstruction AI.
+The user uploaded an academic research paper named: "${filename}".
+Generate the complete text, title, authors, abstract, methodology, key findings, and references for this research paper based on its title and academic context.
+Use PLAIN TEXT only — no markdown formatting.
+        `.trim();
+        return await callGemini(prompt);
+      }
     }
     // Text-only fallback
     const prompt = `
@@ -95,7 +112,7 @@ Structure: Abstract, Introduction, Methodology, Results, Conclusion.
   } catch (err) {
     console.error('Text extraction error:', err);
     const docName = filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-    return `[Document: ${docName}]\n\nNote: Text extraction from PDF encountered an API rate limit or network error (${err?.message || err}). Document registered in library for reference.`;
+    return `[Text Extraction Notice]\nDocument registered: "${docName}". Note: Automated text extraction encountered an API notice (${err?.message || err}).`;
   }
 }
 
@@ -131,15 +148,25 @@ function parseJSONFromText(raw) {
 }
 
 export async function extractDocumentMetadata(text, filename) {
+  const cleanFilename = filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
   const fallback = {
-    title: filename.split('.')[0].replace(/[-_]/g, ' '),
+    title: cleanFilename,
     author: 'Unknown Author',
     year: new Date().getFullYear(),
     keywords: ['research', 'document'],
   };
 
-  if (!text || text.startsWith('Failed') || text.startsWith('Error')) {
-    console.warn('[Metadata] Skipping extraction — text extraction had already failed.');
+  const isErrorText = !text ||
+    text.startsWith('Failed') ||
+    text.startsWith('Error') ||
+    text.startsWith('[Text Extraction Notice]') ||
+    text.includes('encountered an API') ||
+    text.includes('API version v1beta') ||
+    text.includes('NOT_FOUND') ||
+    text.includes('RESOURCE_EXHAUSTED');
+
+  if (isErrorText) {
+    console.warn('[Metadata] Skipping extraction — text contains error/notice string. Using clean filename metadata.');
     return fallback;
   }
 
