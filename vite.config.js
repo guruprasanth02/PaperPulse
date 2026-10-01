@@ -13,5 +13,18 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-firebase': ['firebase/app', 'firebase/auth'],
+          'vendor-genai': ['@google/genai'],
+          'vendor-export': ['jspdf', 'docx', 'file-saver', 'html2canvas']
+        }
+      }
+    }
   }
 });
