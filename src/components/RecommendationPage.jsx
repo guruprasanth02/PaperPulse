@@ -119,11 +119,14 @@ export default function RecommendationPage({ savedPapers = [], onSavePaper, onNa
 
   const handleToggleSave = (e, paper) => {
     e?.stopPropagation();
+    if (!onSavePaper) return;
+    const alreadySaved = isSaved(paper.id);
     onSavePaper(paper);
-    if (isSaved(paper.id)) {
-      toast.info(`Removed "${paper.title.slice(0, 30)}..." from My Papers.`);
+    toggleSavePaper(paper.id, paper).catch(() => {});
+    if (alreadySaved) {
+      toast.info(`Removed "${paper.title.slice(0, 35)}..." from My Papers.`);
     } else {
-      toast.success(`Saved "${paper.title.slice(0, 30)}..." to My Papers!`);
+      toast.success(`Saved "${paper.title.slice(0, 35)}..." to My Papers!`);
     }
   };
 

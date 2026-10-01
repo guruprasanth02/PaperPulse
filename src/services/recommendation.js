@@ -3,7 +3,7 @@
  * Connects to FastAPI recommendation endpoints with intelligent client-side fallback.
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:8000');
 
 // Fallback dataset for client-side search if API server is offline
 const CLIENT_PAPER_DATASET = [
@@ -105,7 +105,7 @@ const CLIENT_PAPER_DATASET = [
   }
 ];
 
-async function fetchArxivClientSide(queryText) {
+export async function fetchArxivClientSide(queryText) {
   if (!queryText || queryText.trim().length < 3) return [];
   try {
     const url = `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(queryText.trim())}&start=0&max_results=8&sortBy=relevance`;

@@ -387,7 +387,7 @@ export default function ChatContainer({ session, setSession }) {
     const labels = { accurate: 'Thanks for the feedback! 👍', incomplete: 'Got it — we\'ll try to be more thorough.', irrelevant: 'Thanks! We\'ll work on relevance.' };
     toast.info(labels[type] || 'Feedback recorded.');
     // Could POST to backend /feedback endpoint
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:8000');
     fetch(`${API_URL}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

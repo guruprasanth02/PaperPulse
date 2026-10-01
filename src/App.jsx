@@ -67,7 +67,16 @@ export default function App() {
       if (exists) {
         updated = current.filter(p => p.id !== paper.id);
       } else {
-        updated = [...current, { ...paper, savedAt: new Date().toISOString() }];
+        const authorsList = Array.isArray(paper.authors)
+          ? paper.authors
+          : (paper.author ? [paper.author] : (paper.authorName ? [paper.authorName] : ['Unknown Author']));
+        const normalized = {
+          ...paper,
+          authors: authorsList,
+          author: authorsList.join(', '),
+          savedAt: new Date().toISOString()
+        };
+        updated = [...current, normalized];
       }
       return { ...prev, savedPapers: updated };
     });
@@ -103,7 +112,7 @@ export default function App() {
     gap:        <ResearchGapPage       documents={session.docs || []} />,
     trend:      <TrendAnalysisPage     documents={session.docs || []} />,
     citation:   <CitationGeneratorPage documents={session.docs || []} />,
-    papers:     <DocBrowser documents={session.docs || []} savedPapers={session.savedPapers || []} onDeleteDoc={handleDeleteDoc} onRemoveSavedPaper={handleRemoveSavedPaper} />,
+    papers:     <DocBrowser documents={session.docs || []} savedPapers={session.savedPapers || []} onDeleteDoc={handleDeleteDoc} onSavePaper={handleToggleSavePaper} onRemoveSavedPaper={handleRemoveSavedPaper} onNavigateTab={setActiveTab} />,
     summary:    <SummaryPanel documents={session.docs || []} />,
     export:     <ExportPanel session={session} />,
     settings:   <SettingsPage />,
