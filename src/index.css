@@ -289,3 +289,245 @@ body {
 
 /* Mono font for code/content */
 .mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT SYSTEM
+   ═══════════════════════════════════════════════════════ */
+
+/* ── App Shell ── */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-dark);
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.app-header {
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--glass-border);
+  background: var(--header-bg);
+  backdrop-filter: blur(12px);
+  position: relative;
+  z-index: 200;
+  gap: 12px;
+}
+
+.app-header-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── Desktop sidebar — visible ≥ 769px ── */
+.sidebar-desktop {
+  display: flex;
+}
+
+/* ── Mobile bottom nav — hidden on desktop ── */
+.mobile-bottom-nav {
+  display: none;
+}
+
+/* ── Mobile drawer ── */
+.mobile-drawer-overlay {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BREAKPOINTS
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Tablet: ≤ 900px ── */
+@media (max-width: 900px) {
+  .sidebar-desktop {
+    width: 220px !important;
+  }
+
+  .app-header {
+    padding: 0 14px;
+  }
+
+  .app-header-badge {
+    display: none;
+  }
+}
+
+/* ── Mobile: ≤ 768px ── */
+@media (max-width: 768px) {
+  /* Hide desktop sidebar */
+  .sidebar-desktop {
+    display: none !important;
+  }
+
+  /* Show bottom nav */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--glass-border);
+    z-index: 500;
+    backdrop-filter: blur(16px);
+  }
+
+  /* Show drawer overlay */
+  .mobile-drawer-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 800;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .mobile-drawer {
+    width: 290px;
+    max-width: 85vw;
+    height: 100%;
+    background: var(--bg-card);
+    border-right: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideInFromLeft 0.25s ease;
+  }
+
+  @keyframes slideInFromLeft {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(0); }
+  }
+
+  /* Hide logo in drawer sidebar content (already in drawer header) */
+  .mobile-drawer .sidebar-logo {
+    display: none;
+  }
+
+  /* App shell adjustments for mobile */
+  .app-shell {
+    height: 100dvh; /* Dynamic viewport height for iOS */
+    flex-direction: column;
+  }
+
+  .app-content {
+    /* Leave room for fixed bottom nav */
+    padding-bottom: 60px;
+  }
+
+  .app-header {
+    height: 52px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .app-header-title {
+    font-size: 12px;
+    max-width: 120px;
+  }
+
+  .app-header-badge {
+    display: none;
+  }
+
+  /* Body scroll fix for mobile */
+  body {
+    overflow: hidden;
+    height: 100dvh;
+  }
+
+  /* ── Page content padding adjustments ── */
+  /* Reduce heavy padding in pages on small screens */
+  .app-main > div {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Glass cards full-width on mobile */
+  .glass-card {
+    border-radius: 12px;
+  }
+
+  /* Buttons — full width stacking on small viewports */
+  .btn-primary,
+  .btn-ghost,
+  .btn-danger {
+    font-size: 13px;
+    padding: 9px 14px;
+  }
+
+  /* Badges — smaller */
+  .badge {
+    font-size: 9px;
+    padding: 3px 7px;
+  }
+}
+
+/* ── Very small screens: ≤ 380px ── */
+@media (max-width: 380px) {
+  .app-header-title {
+    max-width: 90px;
+    font-size: 11px;
+  }
+
+  .theme-toggle {
+    width: 44px;
+    height: 24px;
+  }
+
+  .theme-toggle-knob {
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+  }
+
+  [data-theme="light"] .theme-toggle-knob { transform: translateX(20px); }
+}
+
+/* ── Touch target minimum — accessibility ── */
+@media (hover: none) and (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .badge {
+    min-height: unset;
+    min-width: unset;
+  }
+}
+
+/* ── Prevent text overflow on small cards ── */
+@media (max-width: 768px) {
+  h1, h2, h3 {
+    word-break: break-word;
+  }
+
+  input, textarea, select {
+    font-size: 16px !important; /* Prevents iOS auto-zoom on focus */
+  }
+}

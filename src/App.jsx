@@ -134,7 +134,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--bg-dark)' }}>
+    <div className="app-shell">
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -145,26 +145,19 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+      <div className="app-content">
         {/* ── Header ── */}
-        <header style={{
-          height: 62, flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 24px',
-          borderBottom: '1px solid var(--glass-border)',
-          background: 'var(--header-bg)', backdropFilter: 'blur(12px)',
-          position: 'relative', zIndex: 200,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+        <header className="app-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <div className="app-header-title">
               {tabLabel[activeTab]}
             </div>
             {totalPaperCount > 0 && (
-              <span className="badge badge-success">{totalPaperCount} papers in library</span>
+              <span className="badge badge-success app-header-badge">{totalPaperCount} papers</span>
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <UploadZone onUploadComplete={handleDocsUploaded} />
 
             {/* Theme toggle */}
@@ -183,7 +176,7 @@ export default function App() {
         </header>
 
         {/* ── Main content ── */}
-        <main style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        <main className="app-main">
           {tabContent[activeTab]}
         </main>
       </div>

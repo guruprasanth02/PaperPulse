@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const NAV_GROUPS = [
   {
@@ -35,21 +35,153 @@ const NAV_GROUPS = [
   },
 ];
 
+// Bottom nav items for mobile (most-used tabs)
+const MOBILE_NAV = [
+  { id: 'home',      icon: 'fa-house',       label: 'Home' },
+  { id: 'assistant', icon: 'fa-robot',       label: 'Assistant' },
+  { id: 'recommend', icon: 'fa-lightbulb',   label: 'Discover' },
+  { id: 'papers',    icon: 'fa-folder-open', label: 'Library' },
+  { id: 'menu',      icon: 'fa-bars',        label: 'More' },
+];
+
 export default function Sidebar({ activeTab, setActiveTab, docCount, sessionStats, user, onClearSession, onLogout }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close drawer on tab change
+  const handleNav = (id) => {
+    setActiveTab(id);
+    setMobileOpen(false);
+  };
+
+  // Close drawer on outside click / escape
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMobileOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+
   return (
-    <nav style={{
-      width: 260,
-      background: 'var(--sidebar-bg)',
-      borderRight: '1px solid var(--glass-border)',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '20px 12px',
-      gap: 2,
-      flexShrink: 0,
-      overflowY: 'auto',
-    }}>
-      {/* Logo */}
-      <div style={{ padding: '8px 12px 20px' }}>
+    <>
+      {/* ─── Desktop Sidebar ─────────────────────────────── */}
+      <nav className="sidebar-desktop" style={{
+        width: 260,
+        background: 'var(--sidebar-bg)',
+        borderRight: '1px solid var(--glass-border)',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '20px 12px',
+        gap: 2,
+        flexShrink: 0,
+        overflowY: 'auto',
+      }}>
+        <SidebarContent
+          activeTab={activeTab}
+          setActiveTab={handleNav}
+          docCount={docCount}
+          sessionStats={sessionStats}
+          user={user}
+          onClearSession={onClearSession}
+          onLogout={onLogout}
+        />
+      </nav>
+
+      {/* ─── Mobile: Bottom Navigation Bar ──────────────── */}
+      <nav className="mobile-bottom-nav">
+        {MOBILE_NAV.map((item) => {
+          const isMenu = item.id === 'menu';
+          const active = !isMenu && activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => isMenu ? setMobileOpen(true) : handleNav(item.id)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+                padding: '8px 4px',
+                background: 'none',
+                border: 'none',
+                color: active ? 'var(--primary-light)' : 'var(--text-muted)',
+                cursor: 'pointer',
+                fontSize: 10,
+                fontFamily: 'Inter, sans-serif',
+                fontWeight: active ? 700 : 500,
+                transition: 'color 0.2s',
+                position: 'relative',
+              }}
+            >
+              {active && (
+                <span style={{
+                  position: 'absolute',
+                  top: 0, left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 32, height: 3,
+                  background: 'var(--primary)',
+                  borderRadius: '0 0 4px 4px',
+                }} />
+              )}
+              <i className={`fas ${item.icon}`} style={{ fontSize: 18 }} />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* ─── Mobile: Full Drawer Overlay ─────────────────── */}
+      {mobileOpen && (
+        <div
+          className="mobile-drawer-overlay"
+          onClick={() => setMobileOpen(false)}
+        >
+          <nav
+            className="mobile-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 16px 12px', borderBottom: '1px solid var(--glass-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #0ea5e9, #10b981)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className="fas fa-brain" style={{ color: '#fff', fontSize: 14 }} />
+                </div>
+                <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>PaperPulse</span>
+              </div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 18, cursor: 'pointer', padding: 6 }}
+              >
+                <i className="fas fa-xmark" />
+              </button>
+            </div>
+
+            {/* Drawer nav content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 10px' }}>
+              <SidebarContent
+                activeTab={activeTab}
+                setActiveTab={handleNav}
+                docCount={docCount}
+                sessionStats={sessionStats}
+                user={user}
+                onClearSession={onClearSession}
+                onLogout={onLogout}
+              />
+            </div>
+          </nav>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Shared nav content (used in both desktop & mobile drawer) ───────────────
+function SidebarContent({ activeTab, setActiveTab, docCount, sessionStats, user, onClearSession, onLogout }) {
+  return (
+    <>
+      {/* Logo — desktop only */}
+      <div className="sidebar-logo" style={{ padding: '8px 12px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36,
@@ -62,7 +194,7 @@ export default function Sidebar({ activeTab, setActiveTab, docCount, sessionStat
           </div>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>PaperPulse</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Research & Survey AI</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Research &amp; Survey AI</div>
           </div>
         </div>
       </div>
@@ -88,24 +220,25 @@ export default function Sidebar({ activeTab, setActiveTab, docCount, sessionStat
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   width: '100%',
-                  padding: '9px 12px',
+                  padding: '10px 12px',
                   borderRadius: 10,
                   border: 'none',
                   background: active ? 'rgba(99,102,241,0.2)' : 'transparent',
                   color: active ? 'var(--primary-light)' : 'var(--text-muted)',
                   fontFamily: 'Inter, sans-serif',
-                  fontSize: 13, fontWeight: active ? 600 : 500,
+                  fontSize: 14, fontWeight: active ? 600 : 500,
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   textAlign: 'left',
                   position: 'relative',
                   borderLeft: active ? '2px solid var(--primary)' : '2px solid transparent',
                   marginBottom: 1,
+                  minHeight: 42,
                 }}
                 onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'var(--glass)'; e.currentTarget.style.color = 'var(--text-primary)'; }}}
                 onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}}
               >
-                <i className={`fas ${item.icon}`} style={{ width: 16, textAlign: 'center', fontSize: 13 }} />
+                <i className={`fas ${item.icon}`} style={{ width: 18, textAlign: 'center', fontSize: 14, flexShrink: 0 }} />
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {item.id === 'papers' && docCount > 0 && (
                   <span className="badge badge-primary">{docCount}</span>
@@ -117,9 +250,9 @@ export default function Sidebar({ activeTab, setActiveTab, docCount, sessionStat
       ))}
 
       {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      <div style={{ flex: 1, minHeight: 16 }} />
 
-      {/* Stats */}
+      {/* Session Stats */}
       <div className="glass-card" style={{ padding: 14, margin: '0 0 8px' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
           Session Stats
@@ -141,7 +274,7 @@ export default function Sidebar({ activeTab, setActiveTab, docCount, sessionStat
         </button>
       )}
 
-      {/* User info + sign out */}
+      {/* User info */}
       {user && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10,
@@ -171,7 +304,7 @@ export default function Sidebar({ activeTab, setActiveTab, docCount, sessionStat
       <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '4px 0' }}>
         Powered by Gemini AI
       </div>
-    </nav>
+    </>
   );
 }
 
