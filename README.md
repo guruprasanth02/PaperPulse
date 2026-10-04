@@ -23,7 +23,7 @@
 
 **PaperPulse** is a full-stack AI research platform that accelerates academic and professional literature workflows. Upload research papers, extract structured intelligence, conduct semantic question answering across multiple documents, discover related studies via real-time vector recommendations and live arXiv queries, and generate publication-ready literature surveys and citations — all within a unified, authenticated interface.
 
-> **Live Demo:** [paperpulse.vercel.app](https://paperpulse.vercel.app) &nbsp;|&nbsp; **Backend API:** Hosted on Render
+> **Live Demo:** [paperpulse.vercel.app](https://paperpulse-lac.vercel.app) &nbsp;|&nbsp; **Backend API:** Hosted on Render
 
 ---
 
