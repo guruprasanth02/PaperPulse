@@ -29,6 +29,37 @@ export default function App() {
 
   const { session, setSession, clearSession } = useSessionPersistence(INITIAL_SESSION);
 
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(() => {
+    try {
+      return localStorage.getItem('paperpulse_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('paperpulse_sidebar_collapsed', sidebarCollapsed ? 'true' : 'false');
+    } catch (e) {}
+  }, [sidebarCollapsed]);
+
+  // Keyboard shortcut Ctrl+B / Cmd+B to toggle navbar collapse
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        if (window.innerWidth <= 768) {
+          setMobileMenuOpen(prev => !prev);
+        } else {
+          setSidebarCollapsed(prev => !prev);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // ── Auth loading splash ─────────────────────────────────────────────────────
   if (user === undefined) {
     return (
@@ -143,12 +174,32 @@ export default function App() {
         user={user}
         onClearSession={handleClearSession}
         onLogout={handleLogout}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+        mobileOpen={mobileMenuOpen}
+        setMobileOpen={setMobileMenuOpen}
       />
 
       <div className="app-content">
         {/* ── Header ── */}
         <header className="app-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            {/* Collapse / Expand toggle button */}
+            <button
+              className="sidebar-toggle-btn"
+              onClick={() => {
+                if (window.innerWidth <= 768) {
+                  setMobileMenuOpen(prev => !prev);
+                } else {
+                  setSidebarCollapsed(prev => !prev);
+                }
+              }}
+              title={sidebarCollapsed ? "Expand navbar (Ctrl+B)" : "Collapse navbar (Ctrl+B)"}
+              aria-label="Toggle navbar"
+            >
+              <i className="fas fa-bars" />
+            </button>
+
             <div className="app-header-title">
               {tabLabel[activeTab]}
             </div>

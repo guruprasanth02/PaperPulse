@@ -344,6 +344,55 @@ body {
 /* ── Desktop sidebar — visible ≥ 769px ── */
 .sidebar-desktop {
   display: flex;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease;
+}
+
+.sidebar-desktop.collapsed {
+  width: 72px !important;
+  padding: 16px 8px !important;
+}
+
+/* Sidebar collapse & toggle buttons */
+.sidebar-collapse-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.sidebar-collapse-btn:hover {
+  background: var(--glass);
+  color: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.sidebar-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.sidebar-toggle-btn:hover {
+  background: var(--glass);
+  color: var(--primary-light);
+  border-color: var(--primary);
 }
 
 /* ── Mobile bottom nav — hidden on desktop ── */
@@ -362,8 +411,12 @@ body {
 
 /* ── Tablet: ≤ 900px ── */
 @media (max-width: 900px) {
-  .sidebar-desktop {
+  .sidebar-desktop:not(.collapsed) {
     width: 220px !important;
+  }
+
+  .sidebar-desktop.collapsed {
+    width: 72px !important;
   }
 
   .app-header {
